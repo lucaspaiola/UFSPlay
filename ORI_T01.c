@@ -686,7 +686,28 @@ void criar_usuarios_idx() {
 /* Cria o índice primário jogos_idx */
 void criar_jogos_idx() {
     /* <<< COMPLETE AQUI A IMPLEMENTAÇÃO >>> */
-    printf(ERRO_NAO_IMPLEMENTADO, "criar_jogos_idx");
+    if(!jogos_idx)
+        jogos_idx = malloc(MAX_REGISTROS * sizeof(jogos_idx));
+
+    if(!jogos_idx) {
+        printf(ERRO_MEMORIA_INSUFICIENTE);
+        exit(1);
+    }
+
+    for(unsigned i = 0; i < qtd_registros_jogos; i++) {
+        Jogo j = recuperar_registro_jogo(i); // recuperar_registro_jogo ainda nao implementado
+
+        if (strncmp(j.id_game, "*|", 2) == 0)
+            jogos_idx[i].rrn = -1; // registro excluido
+        else
+            jogos_idx[i].rrn = i;
+
+        strcpy(jogos_idx[i].id_game, j.id_game);
+    }
+
+    qsort(jogos_idx, qtd_registros_jogos, sizeof(jogos_index), qsort_jogos_idx);
+
+    //printf(ERRO_NAO_IMPLEMENTADO, "criar_jogos_idx");
 }
 
 /* Cria o índice primário compras_idx */
@@ -830,7 +851,33 @@ void escrever_registro_compra(Compra c, int rrn) {
 /* Funções principais */
 void cadastrar_usuario_menu(char *id_user, char *username, char *email) {
     /* <<< COMPLETE AQUI A IMPLEMENTAÇÃO >>> */
-    printf(ERRO_NAO_IMPLEMENTADO, "cadastrar_usuario_menu");
+
+    // verifica se o id_user ja existe
+    for(int i = 0; i < qtd_registros_usuarios; i++) {
+        if((strcmp(usuarios_idx[i].id_user, id_user) == 0)) {
+            printf(ERRO_PK_REPETIDA, id_user);
+            return;
+        }
+    }
+
+    Usuario u;
+    strcpy(u.id_user, id_user);
+    strcpy(u.username, username);
+    strcpy(u.email, email);
+    strcpy(u.celular, "***********");
+    u.saldo = 0.0;
+    qtd_registros_usuarios++;
+    
+    // escreve o usuario cadastrado no arquivo, passando como parametro de RRN qtd_registros_usuarios - 1 pois o primeiro usuario vai estar na posicao 0, mas temos um total de 1 usuario, por exemplo.
+    escrever_registro_usuario(u, qtd_registros_usuarios - 1);
+
+    // atualiza os indices primarios
+    criar_usuarios_idx();
+
+    // DUVIDA: nao sei ainda se preciso atualizar aqui tambem os indices scundarios, quando eles forem implementados
+
+    //printf(ERRO_NAO_IMPLEMENTADO, "cadastrar_usuario_menu");
+    printf(SUCESSO);
 }
 
 void cadastrar_celular_menu(char* id_user, char* celular) {
@@ -1005,7 +1052,9 @@ int qsort_usuarios_idx(const void *a, const void *b) {
 /* Função de comparação entre chaves do índice jogos_idx */
 int qsort_jogos_idx(const void *a, const void *b) {
     /* <<< COMPLETE AQUI A IMPLEMENTAÇÃO >>> */
-    printf(ERRO_NAO_IMPLEMENTADO, "qsort_jogos_idx");
+    return strcmp( ( (jogos_index *)a )->id_game, ((jogos_index *)b )->id_game);
+    
+    //printf(ERRO_NAO_IMPLEMENTADO, "qsort_jogos_idx");
 }
 
 /* Função de comparação entre chaves do índice compras_idx */
