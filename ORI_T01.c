@@ -889,7 +889,31 @@ void cadastrar_usuario_menu(char *id_user, char *username, char *email) {
 
 void cadastrar_celular_menu(char* id_user, char* celular) {
     /* <<< COMPLETE AQUI A IMPLEMENTAÇÃO >>> */
-    printf(ERRO_NAO_IMPLEMENTADO, "cadastrar_celular_menu");
+    
+    // cria um struct de indice primario para o usuario
+    usuarios_index novo_usuario;
+    strcpy(novo_usuario.id_user, id_user);
+
+    // verifica se o usuario existe
+    usuarios_index *user = busca_binaria((void *)&novo_usuario, usuarios_idx, qtd_registros_usuarios, sizeof(usuarios_index), qsort_usuarios_idx, false);
+
+    // se user for null entao o ID nao foi encontrado e portanto ainda nao foi cadastrado
+    if(user == NULL) {
+        printf(ERRO_REGISTRO_NAO_ENCONTRADO);
+        return;
+    }
+
+    // atribui ao usuario o seu rrn
+    novo_usuario.rrn = user->rrn;
+
+    // recupera o registro do usuario a partir do RRN e atualiza o saldo na struct
+    Usuario u = recuperar_registro_usuario(novo_usuario.rrn);
+    strcpy(u.celular, celular);
+
+    // atualiza o saldo no arquivo de usuario
+    escrever_registro_usuario(u, novo_usuario.rrn);
+
+    printf(SUCESSO);
 }
 
 void remover_usuario_menu(char *id_user) {
