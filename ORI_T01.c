@@ -968,7 +968,29 @@ void buscar_jogo_titulo_menu(char *titulo) {
 /* Listagem */
 void listar_usuarios_id_user_menu() {
     /* <<< COMPLETE AQUI A IMPLEMENTAÇÃO >>> */
-    printf(ERRO_NAO_IMPLEMENTADO, "listar_usuarios_id_user_menu");
+    
+    // verifica se existe algum usuario
+    if(qtd_registros_usuarios <= 0) {
+        printf(AVISO_NENHUM_REGISTRO_ENCONTRADO);
+        return;
+    }
+
+    // struct e indice primario do usuario necessarios para recuperar o registro e salvar o indice primario do usuario da vez no loop
+    Usuario u;
+    usuarios_index usuario_atual;
+
+    // percorre o laco e imprime em ordem crescente de id_user os dados dos usuarios
+    for(int i = 0; i < qtd_registros_usuarios; i++) {
+        usuario_atual = usuarios_idx[i]; // usuarios_idx ja esta ordenado por ID
+        u = recuperar_registro_usuario(usuario_atual.rrn);
+        printf("%s, ", u.id_user);
+        printf("%s, ", u.username);
+        printf("%s, ", u.email);
+        printf("%s, ", u.celular);
+        printf("%.2lf\n", u.saldo);
+    }
+
+    printf(SUCESSO);
 }
 
 void listar_jogos_categorias_menu(char *categoria) {
