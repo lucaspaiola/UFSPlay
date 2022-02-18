@@ -852,12 +852,19 @@ void escrever_registro_compra(Compra c, int rrn) {
 void cadastrar_usuario_menu(char *id_user, char *username, char *email) {
     /* <<< COMPLETE AQUI A IMPLEMENTAÇÃO >>> */
 
-    // verifica se o id_user ja existe
-    for(int i = 0; i < qtd_registros_usuarios; i++) {
-        if((strcmp(usuarios_idx[i].id_user, id_user) == 0)) {
-            printf(ERRO_PK_REPETIDA, id_user);
-            return;
-        }
+    // cria um struct para o usuario
+    usuarios_index novo_usuario;
+    strcpy(novo_usuario.id_user, id_user);
+    novo_usuario.rrn = qtd_registros_usuarios;
+
+    // verifica se o usuario ja existe com a busca binaria
+    void *item;
+    item = busca_binaria((void *)&novo_usuario, usuarios_idx, qtd_registros_usuarios, sizeof(usuarios_index), qsort_usuarios_idx, false);
+
+    // se item for null entao o ID nao foi encontrado e portanto ainda nao foi cadastrado
+    if(item != NULL) {
+        printf(ERRO_PK_REPETIDA, id_user);
+        return;
     }
 
     Usuario u;
@@ -866,17 +873,17 @@ void cadastrar_usuario_menu(char *id_user, char *username, char *email) {
     strcpy(u.email, email);
     strcpy(u.celular, "***********");
     u.saldo = 0.0;
+
+    usuarios_idx[qtd_registros_usuarios] = novo_usuario;
+
     qtd_registros_usuarios++;
     
-    // escreve o usuario cadastrado no arquivo, passando como parametro de RRN qtd_registros_usuarios - 1 pois o primeiro usuario vai estar na posicao 0, mas temos um total de 1 usuario, por exemplo.
-    escrever_registro_usuario(u, qtd_registros_usuarios - 1);
+    // escreve o usuario cadastrado no arquivo
+    escrever_registro_usuario(u, novo_usuario.rrn);
 
-    // atualiza os indices primarios
-    criar_usuarios_idx();
+    // ordena de acordo com os IDs dos usuarios
+    qsort(usuarios_idx, qtd_registros_usuarios, sizeof(usuarios_index), qsort_usuarios_idx);
 
-    // DUVIDA: nao sei ainda se preciso atualizar aqui tambem os indices scundarios, quando eles forem implementados
-
-    //printf(ERRO_NAO_IMPLEMENTADO, "cadastrar_usuario_menu");
     printf(SUCESSO);
 }
 
@@ -897,7 +904,31 @@ void cadastrar_jogo_menu(char *titulo, char *desenvolvedor, char *editora, char*
 
 void adicionar_saldo_menu(char *id_user, double valor) {
     /* <<< COMPLETE AQUI A IMPLEMENTAÇÃO >>> */
+    
+    // verifica se o valor inserido eh valido
+    if(valor <= 0) {
+        printf(ERRO_VALOR_INVALIDO);
+        return;
+    }
+
+    // verifica se o usuario existe
+    int existe = 0;
+    for(int i = 0; i < qtd_registros_usuarios; i++) {
+        if((strcmp(usuarios_idx[i].id_user, id_user) == 0)) {
+            existe = 1;
+        }
+    }
+
+    if(!existe) {
+        printf(ERRO_REGISTRO_NAO_ENCONTRADO);
+        return;
+    }
+
+    // falta adicionar o saldo ao usuario no arquivo 
+    
     printf(ERRO_NAO_IMPLEMENTADO, "adicionar_saldo_menu");
+
+    //printf(SUCESSO);
 }
 
 void comprar_menu(char *id_user, char *titulo) {
@@ -1115,7 +1146,28 @@ char* strpadright(char *str, char pad, unsigned size) {
 /* Funções da busca binária */
 void* busca_binaria(const void *key, const void *base0, size_t nmemb, size_t size, int (*compar)(const void *, const void *), bool exibir_caminho) {
     /* <<< COMPLETE AQUI A IMPLEMENTAÇÃO >>> */
-    printf(ERRO_NAO_IMPLEMENTADO, "busca_binaria");
+    
+    const char *base = (const char *) base0;
+	int lim, cmp;
+	const void *p;
+
+    if(exibir_caminho)
+        printf(REGS_PERCORRIDOS);
+
+	for (lim = nmemb; lim != 0; lim /= 2) {
+		p = base + (lim / 2) * size;
+		cmp = (*compar)(key, p);
+		if (cmp == 0)
+			return (void *)p;
+		if (cmp > 0) {
+			base = (const char *)p + size;
+			lim--;
+		}
+	}
+
+	return (NULL);
+    
+    //printf(ERRO_NAO_IMPLEMENTADO, "busca_binaria");
 }
 
 void* busca_binaria_piso(const void* key, void* base, size_t num, size_t size, int (*compar)(const void*,const void*)) {
