@@ -911,24 +911,30 @@ void adicionar_saldo_menu(char *id_user, double valor) {
         return;
     }
 
-    // verifica se o usuario existe
-    int existe = 0;
-    for(int i = 0; i < qtd_registros_usuarios; i++) {
-        if((strcmp(usuarios_idx[i].id_user, id_user) == 0)) {
-            existe = 1;
-        }
-    }
+    // cria um struct de indice primario para o usuario
+    usuarios_index novo_usuario;
+    strcpy(novo_usuario.id_user, id_user);
 
-    if(!existe) {
+    // verifica se o usuario existe
+    usuarios_index *user = busca_binaria((void *)&novo_usuario, usuarios_idx, qtd_registros_usuarios, sizeof(usuarios_index), qsort_usuarios_idx, false);
+
+    // se user for null entao o ID nao foi encontrado e portanto ainda nao foi cadastrado
+    if(user == NULL) {
         printf(ERRO_REGISTRO_NAO_ENCONTRADO);
         return;
     }
 
-    // falta adicionar o saldo ao usuario no arquivo 
-    
-    printf(ERRO_NAO_IMPLEMENTADO, "adicionar_saldo_menu");
+    // atribui ao usuario o seu rrn
+    novo_usuario.rrn = user->rrn;
 
-    //printf(SUCESSO);
+    // recupera o registro do usuario a partir do RRN e atualiza o saldo na struct
+    Usuario u = recuperar_registro_usuario(novo_usuario.rrn);
+    u.saldo += valor;
+
+    // atualiza o saldo no arquivo de usuario
+    escrever_registro_usuario(u, novo_usuario.rrn);
+
+    printf(SUCESSO);
 }
 
 void comprar_menu(char *id_user, char *titulo) {
