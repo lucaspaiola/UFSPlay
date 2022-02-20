@@ -695,7 +695,7 @@ void criar_jogos_idx() {
     }
 
     for(unsigned i = 0; i < qtd_registros_jogos; i++) {
-        Jogo j = recuperar_registro_jogo(i); // recuperar_registro_jogo ainda nao implementado
+        Jogo j = recuperar_registro_jogo(i);
 
         if (strncmp(j.id_game, "*|", 2) == 0)
             jogos_idx[i].rrn = -1; // registro excluido
@@ -719,7 +719,25 @@ void criar_compras_idx() {
 /* Cria o índice secundário titulo_idx */
 void criar_titulo_idx() {
     /* <<< COMPLETE AQUI A IMPLEMENTAÇÃO >>> */
-    printf(ERRO_NAO_IMPLEMENTADO, "criar_titulo_idx");
+    
+    if(!titulo_idx)
+        titulo_idx = malloc(MAX_REGISTROS * sizeof(jogos_index));
+
+    if(!titulo_idx) {
+        printf(ERRO_MEMORIA_INSUFICIENTE);
+        exit(1);
+    }
+
+    for(int i = 0; i < qtd_registros_jogos; i++) {
+        Jogo j = recuperar_registro_jogo(i);
+
+        strcpy(titulo_idx[i].id_game, j.id_game);
+        strcpy(titulo_idx[i].titulo, j.titulo);
+    }
+    
+    qsort(titulo_idx, qtd_registros_jogos, sizeof(titulos_index), qsort_titulo_idx);
+
+    //printf(ERRO_NAO_IMPLEMENTADO, "criar_titulo_idx");
 }
 
 /* Cria o índice secundário data_user_game_idx */
@@ -797,7 +815,29 @@ Usuario recuperar_registro_usuario(int rrn) {
  * informado e retorna os dados na struct Jogo */
 Jogo recuperar_registro_jogo(int rrn) {
     /* <<< COMPLETE AQUI A IMPLEMENTAÇÃO >>> */
-    printf(ERRO_NAO_IMPLEMENTADO, "recuperar_registro_jogo");
+    Jogo j;
+    char temp[TAM_REGISTRO_JOGO + 1], *p;
+    strncpy(temp, ARQUIVO_JOGOS + (rrn * TAM_REGISTRO_JOGO), TAM_REGISTRO_JOGO);
+    temp[TAM_REGISTRO_JOGO] = '\0';
+
+    p = strtok(temp, ";");
+    strcpy(j.id_game, p);
+    p = strtok(NULL, ";");
+    strcpy(j.titulo, p);
+    p = strtok(NULL, ";");
+    strcpy(j.desenvolvedor, p);
+    p = strtok(NULL, ";");
+    strcpy(j.editora, p);
+    p = strtok(NULL, ";");
+    strcpy(j.data_lancamento, p);
+    p = strtok(NULL, ";");
+    j.preco = atof(p);
+    p = strtok(NULL, ";");
+    strcpy(j.categorias, p);
+
+    return j;
+
+    //printf(ERRO_NAO_IMPLEMENTADO, "recuperar_registro_jogo");
 }
 
 /* Recupera do arquivo de compras o registro com o RRN
@@ -837,7 +877,34 @@ void escrever_registro_usuario(Usuario u, int rrn) {
  * os dados na struct Jogo */
 void escrever_registro_jogo(Jogo j, int rrn) {
     /* <<< COMPLETE AQUI A IMPLEMENTAÇÃO >>> */
-    printf(ERRO_NAO_IMPLEMENTADO, "escrever_registro_jogo");
+    
+    char temp[TAM_REGISTRO_JOGO + 1], p[100];
+    temp[0] = '\0'; p[0] = '\0';
+
+    strcpy(temp, j.id_game);
+    strcat(temp, ";");
+    strcat(temp, j.titulo);
+    strcat(temp, ";");
+    strcat(temp, j.desenvolvedor);
+    strcat(temp, ";");
+    strcat(temp, j.editora);
+    strcat(temp, ";");
+    strcat(temp, j.data_lancamento);
+    strcat(temp, ";");
+    sprintf(p, "%013.2lf", j.preco);
+    strcat(temp, p);
+    strcat(temp, ";");
+    strcat(temp, j.categorias);
+    strcat(temp, ";");
+
+    for(int i = strlen(temp); i < TAM_REGISTRO_JOGO; i++)
+        temp[i] = '#';
+
+    strncpy(ARQUIVO_JOGOS + rrn*TAM_REGISTRO_JOGO, temp, TAM_REGISTRO_JOGO);
+    ARQUIVO_JOGOS[qtd_registros_jogos*TAM_REGISTRO_JOGO] = '\0';
+    
+    
+    //printf(ERRO_NAO_IMPLEMENTADO, "escrever_registro_jogo");
 }
 
 /* Escreve no arquivo de compras na posição informada (RRN)
@@ -903,7 +970,7 @@ void cadastrar_celular_menu(char* id_user, char* celular) {
         return;
     }
 
-    // atribui ao usuario o seu rrn
+    // atribui ao usuario encontrado o seu rrn
     novo_usuario.rrn = user->rrn;
 
     // recupera o registro do usuario a partir do RRN e atualiza o saldo na struct
@@ -923,7 +990,57 @@ void remover_usuario_menu(char *id_user) {
 
 void cadastrar_jogo_menu(char *titulo, char *desenvolvedor, char *editora, char* lancamento, double preco) {
     /* <<< COMPLETE AQUI A IMPLEMENTAÇÃO >>> */
-    printf(ERRO_NAO_IMPLEMENTADO, "cadastrar_jogo_menu");
+    
+    // cria o indice primario para o jogo
+    jogos_index novo_jogo_indice;
+    char temp[TAM_ID_GAME]; // armazena em forma de string o ID_game
+    temp[0] = '\0';
+    sprintf(temp, "%08d", qtd_registros_jogos);
+    strcpy(novo_jogo_indice.id_game, temp);
+    novo_jogo_indice.rrn = qtd_registros_jogos;
+
+    // cria um indice secundario do jogo
+    titulos_index novo_titulo;
+    strcpy(novo_titulo.titulo, titulo);
+    strcpy(novo_titulo.id_game, temp);
+
+    // faz a busca binaria pelo titulo
+    titulos_index *title = busca_binaria((void *)&novo_titulo, titulo_idx, qtd_registros_jogos, sizeof(titulos_index), qsort_titulo_idx, false);
+    
+    // se title nao for null entao um titulo com o mesmo nome ja foi cadastrado 
+    if(title != NULL) {
+        printf(ERRO_PK_REPETIDA, titulo);
+        return;
+    }
+
+    // Cria uma struct para o novo jogo
+    Jogo j;
+    strcpy(j.id_game, temp);
+    strcpy(j.titulo, titulo);
+    strcpy(j.desenvolvedor, desenvolvedor);
+    strcpy(j.editora, editora);
+    strcpy(j.data_lancamento, lancamento);
+    j.preco = preco;
+    strcpy(j.categorias[0], "");
+    strcpy(j.categorias[1], "");
+    strcpy(j.categorias[2], "");
+
+    titulo_idx[qtd_registros_jogos] = novo_titulo;
+
+    qtd_registros_jogos++;
+    
+    // escreve o jogo no arquivo
+    escrever_registro_jogo(j, novo_jogo_indice.rrn);
+
+    // atualiza os indices primarios
+    qsort(jogos_idx, qtd_registros_jogos, sizeof(jogos_index), qsort_jogos_idx);
+
+    // atualiza os indices secundarios
+    qsort(titulo_idx, qtd_registros_jogos, sizeof(titulos_index), qsort_titulo_idx);
+
+    //printf(ERRO_NAO_IMPLEMENTADO, "cadastrar_jogo_menu");
+
+    printf(SUCESSO);
 }
 
 void adicionar_saldo_menu(char *id_user, double valor) {
@@ -1149,7 +1266,10 @@ int qsort_compras_idx(const void *a, const void *b) {
 /* Função de comparação entre chaves do índice titulo_idx */
 int qsort_titulo_idx(const void *a, const void *b) {
     /* <<< COMPLETE AQUI A IMPLEMENTAÇÃO >>> */
-    printf(ERRO_NAO_IMPLEMENTADO, "qsort_titulo_idx");
+    
+    return strcmp( ( (titulos_index *)a )->titulo, ((titulos_index *)b )->titulo);
+    
+    //printf(ERRO_NAO_IMPLEMENTADO, "qsort_titulo_idx");
 }
 
 /* Funções de comparação entre chaves do índice data_user_game_idx */
