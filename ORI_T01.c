@@ -1092,7 +1092,31 @@ void cadastrar_categoria_menu(char* titulo, char* categoria) {
 /* Busca */
 void buscar_usuario_id_user_menu(char *id_user) {
     /* <<< COMPLETE AQUI A IMPLEMENTAÇÃO >>> */
-    printf(ERRO_NAO_IMPLEMENTADO, "buscar_usuario_id_user_menu");
+    
+    // realiza a busca binaria procurando o id informado
+    usuarios_index usuario_buscado;
+    strcpy(usuario_buscado.id_user, id_user);
+    
+    usuarios_index *encontrado = busca_binaria((void*)&usuario_buscado, usuarios_idx, qtd_registros_usuarios, sizeof(usuarios_index), qsort_usuarios_idx, true);
+
+    // se a busca retornar null entao o id nao foi encontrado
+    if(encontrado == NULL) {
+        printf(ERRO_REGISTRO_NAO_ENCONTRADO);
+        return;
+    }
+
+    // recupera o usuario buscado
+    Usuario u;
+    u = recuperar_registro_usuario(encontrado->rrn);
+
+    // imprime os campos do usuario de forma formatada
+    printf("%s, ", u.id_user);
+    printf("%s, ", u.username);
+    printf("%s, ", u.email);
+    printf("%s, ", u.celular);
+    printf("%.2f\n", u.saldo);
+    
+    //printf(ERRO_NAO_IMPLEMENTADO, "buscar_usuario_id_user_menu");
 }
 
 void buscar_jogo_id_menu(char *id_game) {
@@ -1320,7 +1344,7 @@ void* busca_binaria(const void *key, const void *base0, size_t nmemb, size_t siz
     /* <<< COMPLETE AQUI A IMPLEMENTAÇÃO >>> */
     
     const char *base = (const char *) base0;
-	int lim, cmp;
+	int lim, cmp, pos_atual;
 	const void *p;
 
     if(exibir_caminho)
@@ -1328,15 +1352,20 @@ void* busca_binaria(const void *key, const void *base0, size_t nmemb, size_t siz
 
 	for (lim = nmemb; lim != 0; lim /= 2) {
 		p = base + (lim / 2) * size;
+        pos_atual = ((int)p - (int)base0) / size; // subtrai a posicao de endereco atual da posicao do inicio do vetor e depois divide pelo tamanho de cada indice para printar o indice atual
+        if(exibir_caminho) printf(" %d", pos_atual); 
 		cmp = (*compar)(key, p);
-		if (cmp == 0)
+		if (cmp == 0) {
+            if(exibir_caminho) printf("\n");
 			return (void *)p;
+        }
 		if (cmp > 0) {
 			base = (const char *)p + size;
 			lim--;
 		}
 	}
 
+    if(exibir_caminho) printf("\n");
 	return (NULL);
     
     //printf(ERRO_NAO_IMPLEMENTADO, "busca_binaria");
