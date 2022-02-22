@@ -833,7 +833,20 @@ Jogo recuperar_registro_jogo(int rrn) {
     p = strtok(NULL, ";");
     j.preco = atof(p);
     p = strtok(NULL, ";");
-    strcpy(j.categorias, p);
+    // como fazer com as categorias ?
+    if(!p) {
+        strcpy(j.categorias[0], p);
+        p = strtok(NULL, "|");
+    }
+    if(!p) {
+        strcpy(j.categorias[1], p);
+        p = strtok(NULL, "|");
+    }
+    if(!p) {
+        strcpy(j.categorias[2], p);
+        p = strtok(NULL, "|");
+    }
+    
 
     return j;
 
@@ -919,7 +932,7 @@ void escrever_registro_compra(Compra c, int rrn) {
 void cadastrar_usuario_menu(char *id_user, char *username, char *email) {
     /* <<< COMPLETE AQUI A IMPLEMENTAÇÃO >>> */
 
-    // cria um struct para o usuario
+    // cria um indice primario para o usuario
     usuarios_index novo_usuario;
     strcpy(novo_usuario.id_user, id_user);
     novo_usuario.rrn = qtd_registros_usuarios;
@@ -1025,6 +1038,8 @@ void cadastrar_jogo_menu(char *titulo, char *desenvolvedor, char *editora, char*
     strcpy(j.categorias[1], "");
     strcpy(j.categorias[2], "");
 
+    // atualiza os vetores de indices primarios e secundarios
+    jogos_idx[qtd_registros_jogos] = novo_jogo_indice;
     titulo_idx[qtd_registros_jogos] = novo_titulo;
 
     qtd_registros_jogos++;
@@ -1093,10 +1108,11 @@ void cadastrar_categoria_menu(char* titulo, char* categoria) {
 void buscar_usuario_id_user_menu(char *id_user) {
     /* <<< COMPLETE AQUI A IMPLEMENTAÇÃO >>> */
     
-    // realiza a busca binaria procurando o id informado
+    // cria um indice primario para o usuario
     usuarios_index usuario_buscado;
     strcpy(usuario_buscado.id_user, id_user);
     
+    // realiza a busca binaria procurando o id informado
     usuarios_index *encontrado = busca_binaria((void*)&usuario_buscado, usuarios_idx, qtd_registros_usuarios, sizeof(usuarios_index), qsort_usuarios_idx, true);
 
     // se a busca retornar null entao o id nao foi encontrado
@@ -1121,7 +1137,35 @@ void buscar_usuario_id_user_menu(char *id_user) {
 
 void buscar_jogo_id_menu(char *id_game) {
     /* <<< COMPLETE AQUI A IMPLEMENTAÇÃO >>> */
-    printf(ERRO_NAO_IMPLEMENTADO, "buscar_jogo_id_menu");
+    
+    // cria um indice primario para o jogo
+    jogos_index jogo_buscado;
+    strcpy(jogo_buscado.id_game, id_game);
+
+    // realiza a busca binaria
+    jogos_index *buscado = busca_binaria((void*)&jogo_buscado, jogos_idx, qtd_registros_jogos, sizeof(jogos_index), qsort_jogos_idx, true);
+
+    // se a busca retornar null entao o id nao foi encontrado
+    if(buscado == NULL) {
+        printf(ERRO_REGISTRO_NAO_ENCONTRADO);
+        return;
+    }
+
+    //printf("%d\n", jogo_buscado->rrn);
+
+    // recupera o jogo buscado
+    Jogo j;
+    j = recuperar_registro_jogo(buscado->rrn);
+
+    // imprime na tela os campos do jogo de forma formatada
+    printf("%s, ", j.id_game);
+    printf("%s, ", j.titulo);
+    printf("%s, ", j.desenvolvedor);
+    printf("%s, ", j.editora);
+    printf("%s, ", j.data_lancamento);
+    printf("%.2f\n", j.preco);
+
+    //printf(ERRO_NAO_IMPLEMENTADO, "buscar_jogo_id_menu");
 }
 
 void buscar_jogo_titulo_menu(char *titulo) {
