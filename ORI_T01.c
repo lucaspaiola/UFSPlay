@@ -998,7 +998,38 @@ void cadastrar_celular_menu(char* id_user, char* celular) {
 
 void remover_usuario_menu(char *id_user) {
     /* <<< COMPLETE AQUI A IMPLEMENTAÇÃO >>> */
-    printf(ERRO_NAO_IMPLEMENTADO, "remover_usuario_menu");
+    
+    // cria o indice primario do usuario
+    usuarios_index usuario_buscado;
+    strcpy(usuario_buscado.id_user, id_user);
+
+    // busca binaria pelo usuario
+    usuarios_index *removido = busca_binaria((void*)&usuario_buscado, usuarios_idx, qtd_registros_usuarios, sizeof(usuarios_index), qsort_usuarios_idx, false);
+
+    // busca binaria nao encontrou o id informado ou aquele usuario ja foi removido
+    if(removido == NULL || removido->rrn == -1) {
+        printf(ERRO_REGISTRO_NAO_ENCONTRADO);
+        return;
+    }
+
+    usuario_buscado.rrn = removido->rrn;
+
+    // recuperar o usuario
+    Usuario u = recuperar_registro_usuario(usuario_buscado.rrn);
+
+    // trocar o id user por *|
+    strncpy(u.id_user, "*|", 2);
+
+    // escrever no arquivo de usuario
+    escrever_registro_usuario(u, usuario_buscado.rrn);
+
+    // coloca o rrn como -1 no indice primario correspondente aquele usuario
+    int pos = ((int)removido - (int)usuarios_idx) / sizeof(usuarios_index);
+    usuarios_idx[pos].rrn = -1;
+
+    //printf(ERRO_NAO_IMPLEMENTADO, "remover_usuario_menu");
+
+    printf(SUCESSO);
 }
 
 void cadastrar_jogo_menu(char *titulo, char *desenvolvedor, char *editora, char* lancamento, double preco) {
@@ -1191,15 +1222,15 @@ void listar_usuarios_id_user_menu() {
     // percorre o laco e imprime em ordem crescente de id_user os dados dos usuarios
     for(int i = 0; i < qtd_registros_usuarios; i++) {
         usuario_atual = usuarios_idx[i]; // usuarios_idx ja esta ordenado por ID
-        u = recuperar_registro_usuario(usuario_atual.rrn);
-        printf("%s, ", u.id_user);
-        printf("%s, ", u.username);
-        printf("%s, ", u.email);
-        printf("%s, ", u.celular);
-        printf("%.2lf\n", u.saldo);
+        if(usuario_atual.rrn != -1) {
+            u = recuperar_registro_usuario(usuario_atual.rrn);
+            printf("%s, ", u.id_user);
+            printf("%s, ", u.username);
+            printf("%s, ", u.email);
+            printf("%s, ", u.celular);
+            printf("%.2lf\n", u.saldo);
+        }
     }
-
-    printf(SUCESSO);
 }
 
 void listar_jogos_categorias_menu(char *categoria) {
