@@ -1024,7 +1024,7 @@ void remover_usuario_menu(char *id_user) {
     escrever_registro_usuario(u, usuario_buscado.rrn);
 
     // coloca o rrn como -1 no indice primario correspondente aquele usuario
-    removido->rrn = -1;
+    removido->rrn = - 1;
 
     //printf(ERRO_NAO_IMPLEMENTADO, "remover_usuario_menu");
 
@@ -1247,9 +1247,49 @@ void listar_compras_periodo_menu(char *data_inicio, char *data_fim) {
 void liberar_espaco_menu() {
     /* <<< COMPLETE AQUI A IMPLEMENTAÇÃO >>> */
     
+    Usuario u; 
+    usuarios_index *usuario_aux;
+    usuarios_index usuario_aux2;
+    usuarios_index indices_aux[MAX_REGISTROS];
+    int rrn_atual = 0; unsigned int removidos = 0;
+    char arquivo_usuario_aux[TAM_ARQUIVO_USUARIO + 1];
+    strncpy(arquivo_usuario_aux, "\0", TAM_ARQUIVO_USUARIO);
+
+    for(int i = 0; i < qtd_registros_usuarios; i++) {
+        u = recuperar_registro_usuario(i);
+        strcpy(usuario_aux2.id_user, u.id_user);
+        
+        usuario_aux = busca_binaria((void*)&usuario_aux2, usuarios_idx, qtd_registros_usuarios, sizeof(usuarios_index), qsort_usuarios_idx, false);
+
+        // usuario ainda existente no arquivo
+        if(strncmp(u.id_user, "*|", 2) != 0) {
+            strncpy(arquivo_usuario_aux +(rrn_atual * TAM_REGISTRO_USUARIO), ARQUIVO_USUARIOS +(i * TAM_REGISTRO_USUARIO), TAM_REGISTRO_USUARIO);
+            strcpy(indices_aux[rrn_atual].id_user, u.id_user);
+            indices_aux[rrn_atual].rrn = rrn_atual;
+            rrn_atual++;
+        // usuario foi removido
+        } else {
+            removidos++;
+        }
+    }
+
+    // atualiza a qtd de registros
+    qtd_registros_usuarios -= removidos;
+
+    // ordena os indices primarios
+    qsort(indices_aux, qtd_registros_usuarios, sizeof(usuarios_index), qsort_usuarios_idx);
+
+    // atualiza os valores de usuarios_idx
+    for(int i = 0; i < qtd_registros_usuarios; i++) {
+        usuarios_idx[i] = indices_aux[i];
+    }
+
+    // atualiza o arquivo de usuarios
+    strncpy(ARQUIVO_USUARIOS, arquivo_usuario_aux, TAM_ARQUIVO_USUARIO);
     
-    
-    printf(ERRO_NAO_IMPLEMENTADO, "liberar_espaco_menu");
+    //printf(ERRO_NAO_IMPLEMENTADO, "liberar_espaco_menu");
+
+    printf(SUCESSO);
 }
 
 
@@ -1341,7 +1381,12 @@ void imprimir_categorias_primario_idx_menu() {
 /* Liberar memória e encerrar programa */
 void liberar_memoria_menu() {
     /* <<< COMPLETE AQUI A IMPLEMENTAÇÃO >>> */
-    printf(ERRO_NAO_IMPLEMENTADO, "liberar_memoria_menu");
+    
+    free(usuarios_idx);
+    free(jogos_idx);
+    free(titulo_idx);
+    
+    //printf(ERRO_NAO_IMPLEMENTADO, "liberar_memoria_menu");
 }
 
 
