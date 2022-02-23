@@ -1024,8 +1024,7 @@ void remover_usuario_menu(char *id_user) {
     escrever_registro_usuario(u, usuario_buscado.rrn);
 
     // coloca o rrn como -1 no indice primario correspondente aquele usuario
-    int pos = ((int)removido - (int)usuarios_idx) / sizeof(usuarios_index);
-    usuarios_idx[pos].rrn = -1;
+    removido->rrn = -1;
 
     //printf(ERRO_NAO_IMPLEMENTADO, "remover_usuario_menu");
 
@@ -1247,6 +1246,9 @@ void listar_compras_periodo_menu(char *data_inicio, char *data_fim) {
 /* Liberar espaço */
 void liberar_espaco_menu() {
     /* <<< COMPLETE AQUI A IMPLEMENTAÇÃO >>> */
+    
+    
+    
     printf(ERRO_NAO_IMPLEMENTADO, "liberar_espaco_menu");
 }
 
