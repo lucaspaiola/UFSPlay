@@ -1418,7 +1418,46 @@ void listar_jogos_categorias_menu(char *categoria) {
 
 void listar_compras_periodo_menu(char *data_inicio, char *data_fim) {
     /* <<< COMPLETE AQUI A IMPLEMENTAÇÃO >>> */
-    printf(ERRO_NAO_IMPLEMENTADO, "listar_compras_periodo_menu");
+    
+    if(qtd_registros_compras <= 0) {
+        printf(AVISO_NENHUM_REGISTRO_ENCONTRADO);
+        return;
+    }
+
+    data_user_game_index data_compra_atual;
+    data_user_game_index *data_compra_buscada;
+    compras_index compra_atual;
+    compras_index *compra_buscada;
+    int encontrado = 0;
+
+    for(int i = 0; i < qtd_registros_compras; i++) {
+        data_compra_atual = data_user_game_idx[i];
+        
+        // verifica se a data da compra esta dentro do prazo estabelecido
+        if((strcmp(data_compra_atual.data, data_inicio) >= 0) && (strcmp(data_compra_atual.data, data_fim) <= 0)) {
+            
+            // busca binaria pela compra
+            data_compra_buscada = busca_binaria((void*)& data_compra_atual, data_user_game_idx, qtd_registros_compras, sizeof(data_user_game_index), qsort_data_user_game_idx, false);
+
+            strcpy(compra_atual.id_user, data_compra_buscada->id_user);
+            strcpy(compra_atual.id_game, data_compra_buscada->id_game);
+
+            // busca pela compra no indice primario para imprimir os registros percorridos
+            compra_buscada = busca_binaria((void*)&compra_atual, compras_idx, qtd_registros_compras, sizeof(compras_index), qsort_compras_idx, true);
+
+            // imprime na tela os dados
+            printf("%s, ", compra_buscada->id_user);
+            printf("%s, ", data_compra_buscada->data);
+            printf("%s\n", compra_buscada->id_game);
+
+            encontrado = 1;
+        }
+    }
+
+    if(!encontrado)
+        printf(AVISO_NENHUM_REGISTRO_ENCONTRADO);
+    
+    //printf(ERRO_NAO_IMPLEMENTADO, "listar_compras_periodo_menu");
 }
 
 
