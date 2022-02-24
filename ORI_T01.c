@@ -1346,7 +1346,40 @@ void buscar_jogo_id_menu(char *id_game) {
 
 void buscar_jogo_titulo_menu(char *titulo) {
     /* <<< COMPLETE AQUI A IMPLEMENTAÇÃO >>> */
-    printf(ERRO_NAO_IMPLEMENTADO, "buscar_jogo_titulo_menu");
+
+    // indice secundario do jogo
+    titulos_index titulo_procurado;
+    strcpy(titulo_procurado.titulo, titulo);
+
+    // busca binaria pelo titulo
+    titulos_index *titulo_buscado = busca_binaria((void*)&titulo_procurado, titulo_idx, qtd_registros_jogos, sizeof(titulos_index), qsort_titulo_idx, true);
+
+    // busca nao encontrou o titulo
+    if(titulo_buscado == NULL) {
+        printf(ERRO_REGISTRO_NAO_ENCONTRADO);
+        return;
+    }
+
+    // indice primario do jogo
+    jogos_index jogo_procurado;
+    strcpy(jogo_procurado.id_game, titulo_buscado->id_game);
+
+    // busca binaria pelo id_game para saber o rrn
+    jogos_index *jogo_buscado = busca_binaria((void*)&jogo_procurado, jogos_idx, qtd_registros_jogos, sizeof(jogos_index), qsort_jogos_idx, true);
+
+    // recupera o jogo no arquivo de dados
+    Jogo j = recuperar_registro_jogo(jogo_buscado->rrn);
+
+    // printa os dados de forma formatada
+    printf("%s, ", j.id_game);
+    printf("%s, ", j.titulo);
+    printf("%s, ", j.desenvolvedor);
+    printf("%s, ", j.editora);
+    printf("%s, ", j.data_lancamento);
+    printf("%.2f\n", j.preco);
+
+
+    //printf(ERRO_NAO_IMPLEMENTADO, "buscar_jogo_titulo_menu");
 }
 
 
