@@ -724,11 +724,13 @@ void criar_compras_idx() {
 
     for(int i = 0; i < qtd_registros_compras; i++) {
         Compra c = recuperar_registro_compra(i);
+        
         compras_idx[i].rrn = i;
-
         strcpy(compras_idx[i].id_user, c.id_user_dono);
         strcpy(compras_idx[i].id_game, c.id_game);
     }
+
+    qsort(compras_idx, qtd_registros_compras, sizeof(compras_index), qsort_compras_idx);
     
     //printf(ERRO_NAO_IMPLEMENTADO, "criar_compras_idx");
 }
@@ -776,6 +778,8 @@ void criar_data_user_game_idx() {
         strcpy(data_user_game_idx[i].id_user, c.id_user_dono);
         strcpy(data_user_game_idx[i].id_game, c.id_game);
     }
+
+    qsort(data_user_game_idx, qtd_registros_compras, sizeof(data_user_game_index), qsort_data_user_game_idx);
     
     //printf(ERRO_NAO_IMPLEMENTADO, "criar_data_user_game_idx");
 }
@@ -783,7 +787,7 @@ void criar_data_user_game_idx() {
 /* Cria os índices (secundário e primário) de categorias_idx */
 void criar_categorias_idx() {
     /* <<< COMPLETE AQUI A IMPLEMENTAÇÃO >>> */
-    printf(ERRO_NAO_IMPLEMENTADO, "criar_categorias_idx");
+    //printf(ERRO_NAO_IMPLEMENTADO, "criar_categorias_idx");
 }
 
 
@@ -896,11 +900,11 @@ Compra recuperar_registro_compra(int rrn) {
 
     strncpy(c.id_user_dono, ARQUIVO_COMPRAS + (rrn * TAM_REGISTRO_COMPRA), 11);
     strncpy(c.data_compra, ARQUIVO_COMPRAS + (rrn * TAM_REGISTRO_COMPRA) + 11, 8);
-    strncpy(c.id_user_dono, ARQUIVO_COMPRAS + (rrn * TAM_REGISTRO_COMPRA) + 19, 8);
+    strncpy(c.id_game, ARQUIVO_COMPRAS + (rrn * TAM_REGISTRO_COMPRA) + 19, 8);
 
-    c.id_user_dono[TAM_ID_USER] = '\0';
-    c.id_game[TAM_ID_GAME] = '\0';
-    c.data_compra[TAM_DATE] = '\0';
+    c.id_user_dono[TAM_ID_USER - 1] = '\0';
+    c.id_game[TAM_ID_GAME - 1] = '\0';
+    c.data_compra[TAM_DATE - 1] = '\0';
     
     return c;
 
@@ -1424,6 +1428,7 @@ void listar_compras_periodo_menu(char *data_inicio, char *data_fim) {
         return;
     }
 
+    // indices secundarios e primarios de compras
     data_user_game_index data_compra_atual;
     data_user_game_index *data_compra_buscada;
     compras_index compra_atual;
@@ -1454,6 +1459,7 @@ void listar_compras_periodo_menu(char *data_inicio, char *data_fim) {
         }
     }
 
+    // nenhum registro encontrado no periodo especificado
     if(!encontrado)
         printf(AVISO_NENHUM_REGISTRO_ENCONTRADO);
     
