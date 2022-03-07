@@ -201,6 +201,7 @@ int qsort_titulo_idx(const void *a, const void *b);
 int qsort_data_user_game_idx(const void *a, const void *b);
 int qsort_data_idx(const void *a, const void *b);
 int qsort_categorias_secundario_idx(const void *a, const void *b);
+int qsort_id_games(const void *a, const void *b);
 
 /* Contadores */
 unsigned qtd_registros_usuarios = 0;
@@ -1511,12 +1512,47 @@ void listar_usuarios_id_user_menu() {
 void listar_jogos_categorias_menu(char *categoria) {
     /* <<< COMPLETE AQUI A IMPLEMENTAÇÃO >>> */
     
-    int result;
+    int result, qtd_jogos, indice_final;
+    char id_games[MAX_REGISTROS][TAM_CHAVE_CATEGORIAS_PRIMARIO_IDX];
 
-    inverted_list_secondary_search(&result, true, categoria, &categorias_idx);
+    // analisa se algum jogo foi encontrado
+    if(!inverted_list_secondary_search(&result, false, categoria, &categorias_idx)) {
+        printf(AVISO_NENHUM_REGISTRO_ENCONTRADO);
+        return;
+    }
+
+    // recebe quantos jogos foram encontrados
+    qtd_jogos = inverted_list_primary_search(id_games, true, result, &indice_final, &categorias_idx);
+
+    // ordena os id_games encontrados
+    qsort(id_games, qtd_jogos, TAM_CHAVE_CATEGORIAS_PRIMARIO_IDX, qsort_id_games);
+
+    Jogo j;
+
+    // indice primario jogo
+    jogos_index jogo_indice;
+    jogos_index *jogo_indice_ptr;
+
+    for(int i = 0; i < qtd_jogos; i++) {
+        strcpy(jogo_indice.id_game, id_games[i]);
+        jogo_indice.id_game[TAM_CHAVE_CATEGORIAS_PRIMARIO_IDX] = '\0'; // como o id_games[] tem um char a menos, o \0 deve ser inserido manualmente
+        // procura o jogo a partir do id_game
+        jogo_indice_ptr = busca_binaria((void*)&jogo_indice, jogos_idx, qtd_registros_jogos, sizeof(jogos_index), qsort_jogos_idx, false);
+
+        // recupera o jogo
+        j = recuperar_registro_jogo(jogo_indice_ptr->rrn);
+
+        // imprime os dados do jogo de forma formatada
+        printf("%s, ", j.id_game);
+        printf("%s, ", j.titulo);
+        printf("%s, ", j.desenvolvedor);
+        printf("%s, ", j.editora);
+        printf("%s, ", j.data_lancamento);
+        printf("%.2f\n", j.preco);
+
+    }
     
-    
-    printf(ERRO_NAO_IMPLEMENTADO, "listar_jogo_categorias_menu");
+    //printf(ERRO_NAO_IMPLEMENTADO, "listar_jogo_categorias_menu");
 }
 
 void listar_compras_periodo_menu(char *data_inicio, char *data_fim) {
@@ -1794,6 +1830,10 @@ int qsort_categorias_secundario_idx(const void *a, const void *b) {
     //printf(ERRO_NAO_IMPLEMENTADO, "qsort_categorias_secundario_idx");
 }
 
+/* Função de ordenar uma matriz contendo id_games, usada para listar os jogos com a mesma categoria em ordem */
+int qsort_id_games(const void *a, const void *b) {
+    return ( strncmp ( ( char * ) a , ( char * ) b, TAM_CHAVE_CATEGORIAS_PRIMARIO_IDX ));
+}
 
 /* Funções de manipulação de Lista Invertida */
 void inverted_list_insert(char *chave_secundaria, char *chave_primaria, inverted_list *t) {
@@ -1868,12 +1908,17 @@ int inverted_list_primary_search(char result[][TAM_CHAVE_CATEGORIAS_PRIMARIO_IDX
 
     int i = 0;
     while(indice != -1) {
+        if(exibir_caminho)
+            printf(" %d", indice);
         *indice_final = indice;
         categoria_atual = t->categorias_primario_idx[indice];
-        strcpy(result[i], categoria_atual.chave_primaria); // escreve em result o id_game
+        strncpy(result[i], categoria_atual.chave_primaria, TAM_CHAVE_CATEGORIAS_PRIMARIO_IDX); // escreve em result o id_game
         indice = categoria_atual.proximo_indice;
         i++;
     }
+
+    if(exibir_caminho)
+        printf("\n");
 
     return i; // retorna a qtd de chaves encontradas
     
