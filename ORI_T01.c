@@ -1395,16 +1395,9 @@ void buscar_usuario_id_user_menu(char *id_user) {
         return;
     }
 
-    // recupera o usuario buscado
-    Usuario u;
-    u = recuperar_registro_usuario(encontrado->rrn);
-
-    // imprime os campos do usuario de forma formatada
-    printf("%s, ", u.id_user);
-    printf("%s, ", u.username);
-    printf("%s, ", u.email);
-    printf("%s, ", u.celular);
-    printf("%.2f\n", u.saldo);
+    // imprime os dados do usuario de forma formatada
+    if(encontrado != NULL)
+        exibir_usuario(encontrado->rrn);
     
     //printf(ERRO_NAO_IMPLEMENTADO, "buscar_usuario_id_user_menu");
 }
@@ -1425,19 +1418,9 @@ void buscar_jogo_id_menu(char *id_game) {
         return;
     }
 
-    //printf("%d\n", jogo_buscado->rrn);
-
-    // recupera o jogo buscado
-    Jogo j;
-    j = recuperar_registro_jogo(buscado->rrn);
-
-    // imprime na tela os campos do jogo de forma formatada
-    printf("%s, ", j.id_game);
-    printf("%s, ", j.titulo);
-    printf("%s, ", j.desenvolvedor);
-    printf("%s, ", j.editora);
-    printf("%s, ", j.data_lancamento);
-    printf("%.2f\n", j.preco);
+    // printa os dados de forma formatada
+    if(buscado != NULL)
+        exibir_jogo(buscado->rrn);
 
     //printf(ERRO_NAO_IMPLEMENTADO, "buscar_jogo_id_menu");
 }
@@ -1465,17 +1448,9 @@ void buscar_jogo_titulo_menu(char *titulo) {
     // busca binaria pelo id_game para saber o rrn
     jogos_index *jogo_buscado = busca_binaria((void*)&jogo_procurado, jogos_idx, qtd_registros_jogos, sizeof(jogos_index), qsort_jogos_idx, true);
 
-    // recupera o jogo no arquivo de dados
-    Jogo j = recuperar_registro_jogo(jogo_buscado->rrn);
-
     // printa os dados de forma formatada
-    printf("%s, ", j.id_game);
-    printf("%s, ", j.titulo);
-    printf("%s, ", j.desenvolvedor);
-    printf("%s, ", j.editora);
-    printf("%s, ", j.data_lancamento);
-    printf("%.2f\n", j.preco);
-
+    if(jogo_buscado != NULL)
+        exibir_jogo(jogo_buscado->rrn);
 
     //printf(ERRO_NAO_IMPLEMENTADO, "buscar_jogo_titulo_menu");
 }
@@ -1491,20 +1466,14 @@ void listar_usuarios_id_user_menu() {
         return;
     }
 
-    // struct e indice primario do usuario necessarios para recuperar o registro e salvar o indice primario do usuario da vez no loop
-    Usuario u;
+    // indice primario do usuario
     usuarios_index usuario_atual;
 
     // percorre o laco e imprime em ordem crescente de id_user os dados dos usuarios
     for(int i = 0; i < qtd_registros_usuarios; i++) {
         usuario_atual = usuarios_idx[i]; // usuarios_idx ja esta ordenado por ID
         if(usuario_atual.rrn != -1) {
-            u = recuperar_registro_usuario(usuario_atual.rrn);
-            printf("%s, ", u.id_user);
-            printf("%s, ", u.username);
-            printf("%s, ", u.email);
-            printf("%s, ", u.celular);
-            printf("%.2lf\n", u.saldo);
+            exibir_usuario(usuario_atual.rrn);
         }
     }
 }
@@ -1539,16 +1508,9 @@ void listar_jogos_categorias_menu(char *categoria) {
         // procura o jogo a partir do id_game
         jogo_indice_ptr = busca_binaria((void*)&jogo_indice, jogos_idx, qtd_registros_jogos, sizeof(jogos_index), qsort_jogos_idx, false);
 
-        // recupera o jogo
-        j = recuperar_registro_jogo(jogo_indice_ptr->rrn);
-
         // imprime os dados do jogo de forma formatada
-        printf("%s, ", j.id_game);
-        printf("%s, ", j.titulo);
-        printf("%s, ", j.desenvolvedor);
-        printf("%s, ", j.editora);
-        printf("%s, ", j.data_lancamento);
-        printf("%.2f\n", j.preco);
+        if(jogo_indice_ptr != NULL)
+            exibir_jogo(jogo_indice_ptr->rrn);
 
     }
     
@@ -1564,9 +1526,8 @@ void listar_compras_periodo_menu(char *data_inicio, char *data_fim) {
     }
 
     // indices secundarios e primarios de compras
-    data_user_game_index data_compra_atual, compra_piso, compra_teto;
-    data_user_game_index *data_compra_buscada, *compra_piso_ptr, *compra_teto_ptr;
-    compras_index compra_atual;
+    data_user_game_index compra_piso, compra_teto;
+    data_user_game_index *compra_piso_ptr, *compra_teto_ptr;
     compras_index *compra_buscada;
     int encontrado = 0;
 
@@ -1576,26 +1537,14 @@ void listar_compras_periodo_menu(char *data_inicio, char *data_fim) {
     strcpy(compra_teto.data, data_inicio);
     compra_teto_ptr = busca_binaria_teto((void*)&compra_teto, data_user_game_idx, qtd_registros_compras, sizeof(data_user_game_index), qsort_data_idx);
 
-    for(int i = 0; i < qtd_registros_compras; i++) {
-        data_compra_atual = data_user_game_idx[i];
-        
-        // verifica se a data da compra esta dentro do prazo estabelecido
-        if((strcmp(data_compra_atual.data, data_inicio) >= 0) && (strcmp(data_compra_atual.data, data_fim) <= 0)) {
-            
-            // busca binaria pela compra
-            data_compra_buscada = busca_binaria((void*)& data_compra_atual, data_user_game_idx, qtd_registros_compras, sizeof(data_user_game_index), qsort_data_user_game_idx, false);
-
-            strcpy(compra_atual.id_user, data_compra_buscada->id_user);
-            strcpy(compra_atual.id_game, data_compra_buscada->id_game);
-
-            // busca pela compra no indice primario para imprimir os registros percorridos
-            compra_buscada = busca_binaria((void*)&compra_atual, compras_idx, qtd_registros_compras, sizeof(compras_index), qsort_compras_idx, true);
-
-            // imprime na tela os dados
-            printf("%s, ", compra_buscada->id_user);
-            printf("%s, ", data_compra_buscada->data);
-            printf("%s\n", compra_buscada->id_game);
-
+    Compra c;
+    for(data_user_game_index *i = compra_teto_ptr; i <= compra_teto_ptr; i++) {
+        strcpy(c.id_user_dono, i->id_user);
+        strcpy(c.id_game, i->id_game);
+        strcpy(c.data_compra, i->data);
+        compra_buscada = busca_binaria((void*)&c, compras_idx, qtd_registros_compras, sizeof(compras_index), qsort_compras_idx, true);
+        if(compra_buscada != NULL) {
+            exibir_compra(compra_buscada->rrn);
             encontrado = 1;
         }
     }
