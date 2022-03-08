@@ -1534,7 +1534,7 @@ void listar_jogos_categorias_menu(char *categoria) {
     jogos_index *jogo_indice_ptr;
 
     for(int i = 0; i < qtd_jogos; i++) {
-        strcpy(jogo_indice.id_game, id_games[i]);
+        strncpy(jogo_indice.id_game, id_games[i], TAM_CHAVE_CATEGORIAS_PRIMARIO_IDX);
         jogo_indice.id_game[TAM_CHAVE_CATEGORIAS_PRIMARIO_IDX] = '\0'; // como o id_games[] tem um char a menos, o \0 deve ser inserido manualmente
         // procura o jogo a partir do id_game
         jogo_indice_ptr = busca_binaria((void*)&jogo_indice, jogos_idx, qtd_registros_jogos, sizeof(jogos_index), qsort_jogos_idx, false);
@@ -1564,11 +1564,17 @@ void listar_compras_periodo_menu(char *data_inicio, char *data_fim) {
     }
 
     // indices secundarios e primarios de compras
-    data_user_game_index data_compra_atual;
-    data_user_game_index *data_compra_buscada;
+    data_user_game_index data_compra_atual, compra_piso, compra_teto;
+    data_user_game_index *data_compra_buscada, *compra_piso_ptr, *compra_teto_ptr;
     compras_index compra_atual;
     compras_index *compra_buscada;
     int encontrado = 0;
+
+    strcpy(compra_piso.data, data_fim);
+    compra_piso_ptr = busca_binaria_piso((void*)&compra_piso, data_user_game_idx, qtd_registros_compras, sizeof(data_user_game_index), qsort_data_idx);
+
+    strcpy(compra_teto.data, data_inicio);
+    compra_teto_ptr = busca_binaria_teto((void*)&compra_teto, data_user_game_idx, qtd_registros_compras, sizeof(data_user_game_index), qsort_data_idx);
 
     for(int i = 0; i < qtd_registros_compras; i++) {
         data_compra_atual = data_user_game_idx[i];
@@ -1751,6 +1757,7 @@ void liberar_memoria_menu() {
 
 /* Função de comparação entre chaves do índice usuarios_idx */
 int qsort_usuarios_idx(const void *a, const void *b) {
+
     return strcmp( ( (usuarios_index *)a )->id_user, ( (usuarios_index *)b )->id_user);
 }
 
@@ -1792,8 +1799,8 @@ int qsort_titulo_idx(const void *a, const void *b) {
 /* Funções de comparação entre chaves do índice data_user_game_idx */
 int qsort_data_idx(const void *a, const void *b) {
     /* <<< COMPLETE AQUI A IMPLEMENTAÇÃO >>> */
-    
-    return strcmp( ( (data_user_game_index*)a )->data, ((data_user_game_index *)b)->data);
+
+    return strcmp( ( (data_user_game_index *)a )->data, ((data_user_game_index *)b)->data);
     
     //printf(ERRO_NAO_IMPLEMENTADO, "qsort_data_idx");
 }
@@ -1968,10 +1975,127 @@ void* busca_binaria(const void *key, const void *base0, size_t nmemb, size_t siz
 
 void* busca_binaria_piso(const void* key, void* base, size_t num, size_t size, int (*compar)(const void*,const void*)) {
     /* <<< COMPLETE AQUI A IMPLEMENTAÇÃO >>> */
-    printf(ERRO_NAO_IMPLEMENTADO, "busca_binaria_piso");
+    
+    const char *base_aux = (const char *) base;
+	int lim, cmp, cmp2;
+	const void *meio, *maior, *menor, *meio_menos_um, *piso = NULL;
+    int menor_idx = 0, maior_idx = num - 1, meio_idx;
+
+    menor = base_aux + (menor_idx * size);
+    maior = base_aux + (maior_idx * size);
+
+    while(menor_idx <= maior_idx) {
+        
+        // se a menor for maior que a maior
+        cmp = (*compar)(menor, maior);
+        if (cmp > 0)
+            return NULL;
+    
+        // compara a chave atual com o maior atual
+        cmp = (*compar)(key, maior);
+        if (cmp >= 0)
+            return (void*)maior;
+
+        // encontra a metade
+        meio = base_aux + ((maior_idx + menor_idx) / 2) * size;
+        meio_idx = (maior_idx + menor_idx) / 2;
+
+        // encontrou o elemento
+        cmp = (*compar)(key, meio);
+        if (cmp == 0) {
+            return (void *)meio;
+        }
+
+        // se estiver entre meio - 1 e meio
+        meio_menos_um = base_aux + ((meio_idx - 1) * size);
+        if(meio_idx > 0) {
+            cmp = (*compar)(key, meio_menos_um);
+            cmp2 = (*compar)(key, meio);
+            if (cmp >= 0 && cmp2 < 0)
+                return (void*)meio_menos_um;
+        }
+        
+        // se a chave for menor que o meio, entao esta na metade da esquerda, senao, esta na metade da direita
+        cmp = (*compar)(key, meio);
+        if (cmp < 0) {
+            maior = meio_menos_um;
+            maior_idx = meio_idx - 1;
+        }
+        else {
+            menor = base_aux + ((meio_idx + 1) * size);
+            menor_idx = meio_idx + 1;
+            piso = meio;
+        }
+
+    }
+
+    return (void*) piso;
+    
+    //printf(ERRO_NAO_IMPLEMENTADO, "busca_binaria_piso");
 }
 
 void* busca_binaria_teto(const void* key, void* base, size_t num, size_t size, int (*compar)(const void*,const void*)) {
     /* <<< COMPLETE AQUI A IMPLEMENTAÇÃO >>> */
-    printf(ERRO_NAO_IMPLEMENTADO, "busca_binaria_teto");
+    
+    const char *base_aux = (const char *) base;
+	int lim, cmp, cmp2;
+	const void *meio, *maior, *menor, *meio_mais_um, *meio_menos_um, *teto = NULL;
+    int menor_idx = 0, maior_idx = num - 1, meio_idx;
+
+    menor = base_aux + (menor_idx * size);
+    maior = base_aux + (maior_idx * size);
+
+    while(menor_idx <= maior_idx) {
+        
+        // chave menor ou igual ao primeiro elemento
+        cmp = (*compar)(key, menor);
+        if (cmp <= 0)
+            return (void*) menor;
+    
+        // chave maior que o ultimo elemento
+        cmp = (*compar)(key, maior);
+        if (cmp > 0)
+            return NULL;
+
+        // encontra a metade
+        meio = base_aux + ((maior_idx + menor_idx) / 2) * size;
+        meio_idx = (maior_idx + menor_idx) / 2;
+
+        // encontrou o elemento
+        cmp = (*compar)(key, meio);
+        if (cmp == 0) {
+            return (void *) meio;
+        }
+
+        // se a chave for maior que o meio, entao o teto eh meio + 1 ou esta entre meio + 1 e maior
+        meio_mais_um = base_aux + ((meio_idx + 1) * size);
+        if(cmp > 0) {
+            cmp = (*compar)(meio_mais_um, maior);
+            cmp2 = (*compar)(key, meio_mais_um);
+            if(cmp <= 0 && cmp2 <= 0)
+                return (void*) meio_mais_um;
+            else {
+                menor = meio_mais_um;
+                menor_idx = meio_idx + 1;
+            }
+        }
+        // se a chave for menor que o meio, entao ou o meio eh o teto, ou o teto esta entre menor e meio - 1
+        else {
+            meio_menos_um = base_aux + ((meio_idx - 1) * size);
+            cmp = (*compar)(key, meio_menos_um);
+
+            if(meio_idx - 1 <= meio_idx && cmp > 0) {
+                return (void*) meio;
+            } else {
+                maior = meio_menos_um;
+                maior_idx = meio_idx - 1;
+                teto = meio;
+            }
+        }
+
+    }
+
+    return (void*)teto;
+    
+    //printf(ERRO_NAO_IMPLEMENTADO, "busca_binaria_teto");
 }
