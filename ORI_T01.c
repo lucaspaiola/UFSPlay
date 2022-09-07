@@ -1640,7 +1640,12 @@ void imprimir_categorias_primario_idx_menu() {
 void liberar_memoria_menu() {
     free(usuarios_idx);
     free(jogos_idx);
+    free(compras_idx);
     free(titulo_idx);
+    free(data_user_game_idx);
+    free(categorias_idx.categorias_primario_idx);
+    free(categorias_idx.categorias_secundario_idx);
+    exit(0);
 }
 
 
